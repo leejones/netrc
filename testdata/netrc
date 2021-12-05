@@ -1,0 +1,10 @@
+machine ferb.example.com
+  login Ferb
+  password HeDoesntSayMuch
+machine isabella.example.com login Isabella password WhatYaDoin?
+machine perry.example.com
+  login Perry
+  password WheresPerry?
+machine phineas.example.com
+  login Phineas
+  password WhatDoYouWantToDoToday?
