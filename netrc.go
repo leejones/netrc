@@ -39,7 +39,8 @@ func WithFile(path string) option {
 	}
 }
 
-func (f *File) Fetch(host string) credentials {
+func (f *File) Fetch(host string) (credentials, bool) {
+	credentials_found := false
 	scanner := bufio.NewScanner(f.File)
 	credentials := credentials{}
 	machine_found := false
@@ -74,6 +75,7 @@ func (f *File) Fetch(host string) credentials {
 		}
 		// Found everything in one-line format (above)
 		if credentials.Login != "" && credentials.Password != "" {
+			credentials_found = true
 			break
 		}
 		if machine_found && strings.HasPrefix(line, "login ") {
@@ -86,11 +88,12 @@ func (f *File) Fetch(host string) credentials {
 		}
 		// Found everything on multiple lines
 		if credentials.Login != "" && credentials.Password != "" {
+			credentials_found = true
 			break
 		}
 	}
 	if err := scanner.Err(); err != nil {
 		panic("Unable to read file")
 	}
-	return credentials
+	return credentials, credentials_found
 }

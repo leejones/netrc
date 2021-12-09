@@ -1,6 +1,7 @@
 package netrc_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/leejones/netrc"
@@ -15,7 +16,7 @@ import (
 // (separated by spaces, tabs, or new lines)". "Entries" means "machine",
 // "login", "password" etc.
 
-func TestFetchReturnsCredentials(t *testing.T) {
+func TestFetchReturnsCredentialsOfFirstMatch(t *testing.T) {
 	t.Parallel()
 	f, err := netrc.NewFile(
 		netrc.WithFile("testdata/netrc"),
@@ -24,7 +25,7 @@ func TestFetchReturnsCredentials(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := "Perry"
-	credentials := f.Fetch("perry.example.com")
+	credentials, ok := f.Fetch("perry.example.com")
 	got := credentials.Login
 	if want != got {
 		t.Errorf("Want: %v, got: %v", want, got)
@@ -34,6 +35,9 @@ func TestFetchReturnsCredentials(t *testing.T) {
 	got = credentials.Password
 	if want != got {
 		t.Errorf("Want: %v, got: %v", want, got)
+	}
+	if ok != true {
+		t.Errorf("Want: true, got: %v", ok)
 	}
 }
 
@@ -45,10 +49,32 @@ func TestFetchReturnsCredentialsWhenOneLineFormat(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	credentials := f.Fetch("isabella.example.com")
+	credentials, ok := f.Fetch("isabella.example.com")
 	want := "Isabella"
 	got := credentials.Login
 	if want != got {
 		t.Errorf("Want: %v, got: %v", want, got)
+	}
+	if ok != true {
+		t.Errorf("Want: true, got: %v", ok)
+	}
+}
+
+func TestFetchMachineNotFound(t *testing.T) {
+	t.Parallel()
+	f, err := netrc.NewFile(
+		netrc.WithFile("testdata/netrc"),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	credentials, ok := f.Fetch("not-found.example.com")
+	want := ","
+	got := strings.Join([]string{credentials.Login, credentials.Password}, ",")
+	if want != got {
+		t.Errorf("Want: %v, got: %v", want, got)
+	}
+	if ok != false {
+		t.Errorf("Want: false, got: %v", ok)
 	}
 }
