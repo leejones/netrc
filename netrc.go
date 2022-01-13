@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"io"
 	"os"
+	"path"
 	"strings"
 )
 
@@ -17,6 +18,19 @@ type File struct {
 }
 
 type option func(f *File) error
+
+func Fetch(host string) (credentials, bool) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		panic("unable to find user's home directory")
+	}
+	netrcPath := path.Join(homeDir, ".netrc")
+	netrcFile, err := NewFile(WithFile(netrcPath))
+	if err != nil {
+		panic("unable to load netrc file")
+	}
+	return netrcFile.Fetch(host)
+}
 
 func NewFile(options ...option) (*File, error) {
 	file := File{}
