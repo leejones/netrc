@@ -11,6 +11,7 @@ type credentials struct {
 	Login    string
 	Password string
 }
+
 type File struct {
 	File io.Reader
 }
