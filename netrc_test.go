@@ -1,9 +1,9 @@
 package netrc_test
 
 import (
-	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/leejones/netrc"
 )
 
@@ -16,51 +16,62 @@ import (
 // (separated by spaces, tabs, or new lines)". "Entries" means "machine",
 // "login", "password" etc.
 
-func TestFetchReturnsCredentialsOfFirstMatch(t *testing.T) {
+func TestGetMachineFound(t *testing.T) {
 	t.Parallel()
-	f, err := netrc.NewFile(
+	netrcFile, err := netrc.NewFile(
 		netrc.WithFile("testdata/netrc"),
 	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "Perry"
-	credentials, ok := f.Fetch("perry.example.com")
-	got := credentials.Login
-	if want != got {
-		t.Errorf("Want: %v, got: %v", want, got)
+	want := netrc.Credentials{
+		Login:    "Blue",
+		Password: "Yellow",
 	}
-
-	want = "WheresPerry?"
-	got = credentials.Password
-	if want != got {
-		t.Errorf("Want: %v, got: %v", want, got)
+	got, err := netrcFile.Get("green.example.com")
+	if err != nil {
+		t.Fatal(err)
 	}
-	if ok != true {
-		t.Errorf("Want: true, got: %v", ok)
+	if !cmp.Equal(want, got) {
+		t.Error(cmp.Diff(want, got))
 	}
 }
 
-func TestFetchReturnsCredentialsWhenOneLineFormat(t *testing.T) {
+func TestGetMachineNotFound(t *testing.T) {
 	t.Parallel()
-	f, err := netrc.NewFile(
+	netrcFile, err := netrc.NewFile(
 		netrc.WithFile("testdata/netrc"),
 	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	credentials, ok := f.Fetch("isabella.example.com")
-	want := "Isabella"
-	got := credentials.Login
-	if want != got {
-		t.Errorf("Want: %v, got: %v", want, got)
+	_, err = netrcFile.Get("not-found.example.com")
+	if err == nil {
+		t.Error("expected an error, but got none")
 	}
-	if ok != true {
-		t.Errorf("Want: true, got: %v", ok)
+}
+func TestGetMultipleMachinesReturnsFirst(t *testing.T) {
+	t.Parallel()
+	f, err := netrc.NewFile(
+		netrc.WithFile("testdata/netrc"),
+	)
+	if err != nil {
+		t.Error(err)
+	}
+	want := netrc.Credentials{
+		Login:    "Red",
+		Password: "Yellow",
+	}
+	got, err := f.Get("orange.example.com")
+	if err != nil {
+		t.Error(err)
+	}
+	if !cmp.Equal(want, got) {
+		t.Error(cmp.Diff(want, got))
 	}
 }
 
-func TestFetchMachineNotFound(t *testing.T) {
+func TestGetMachineOneLineFormat(t *testing.T) {
 	t.Parallel()
 	f, err := netrc.NewFile(
 		netrc.WithFile("testdata/netrc"),
@@ -68,13 +79,15 @@ func TestFetchMachineNotFound(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	credentials, ok := f.Fetch("not-found.example.com")
-	want := ","
-	got := strings.Join([]string{credentials.Login, credentials.Password}, ",")
-	if want != got {
-		t.Errorf("Want: %v, got: %v", want, got)
+	want := netrc.Credentials{
+		Login:    "Blue",
+		Password: "Red",
 	}
-	if ok != false {
-		t.Errorf("Want: false, got: %v", ok)
+	got, err := f.Get("purple.example.com")
+	if err != nil {
+		t.Error(err)
+	}
+	if !cmp.Equal(want, got) {
+		t.Error(cmp.Diff(want, got))
 	}
 }

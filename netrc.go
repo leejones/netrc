@@ -2,13 +2,14 @@ package netrc
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 	"path"
 	"strings"
 )
 
-type credentials struct {
+type Credentials struct {
 	Login    string
 	Password string
 }
@@ -19,17 +20,26 @@ type File struct {
 
 type option func(f *File) error
 
-func Fetch(host string) (credentials, bool) {
+func DefaultNetrcPath() string {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		panic("unable to find user's home directory")
+		panic("Unable to find user's home directory")
 	}
-	netrcPath := path.Join(homeDir, ".netrc")
-	netrcFile, err := NewFile(WithFile(netrcPath))
+	return path.Join(homeDir, ".netrc")
+}
+
+func Get(machine string) (Credentials, error) {
+	netrcFile, err := NewFile(
+		WithFile(DefaultNetrcPath()),
+	)
 	if err != nil {
-		panic("unable to load netrc file")
+		return Credentials{}, err
 	}
-	return netrcFile.Fetch(host)
+	creds, err := netrcFile.Get(machine)
+	if err != nil {
+		return Credentials{}, err
+	}
+	return creds, nil
 }
 
 func NewFile(options ...option) (*File, error) {
@@ -54,33 +64,34 @@ func WithFile(path string) option {
 	}
 }
 
-func (f *File) Fetch(host string) (credentials, bool) {
-	credentials_found := false
+func (f *File) Get(host string) (Credentials, error) {
+	credentials := Credentials{}
+	credentialsFound := false
+	machineFound := false
 	scanner := bufio.NewScanner(f.File)
-	credentials := credentials{}
-	machine_found := false
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if strings.HasPrefix(line, "machine ") {
-			line_parts := strings.Split(line, " ")
-			machine := line_parts[1]
+			lineParts := strings.Split(line, " ")
+			machine := lineParts[1]
 			if machine == host {
-				machine_found = true
-				if len(line_parts) >= 6 {
-					// Netrc entry is using one-line format
-					login_found := false
-					password_found := false
-					for _, part := range line_parts[2:] {
+				machineFound = true
+				// Check for the single-line format, for example:
+				// 		machine foo login bar password baz
+				if len(lineParts) >= 6 {
+					loginFound := false
+					passwordFound := false
+					for _, part := range lineParts[2:] {
 						switch part {
 						case "login":
-							login_found = true
+							loginFound = true
 						case "password":
-							password_found = true
+							passwordFound = true
 						default:
-							if login_found && credentials.Login == "" {
+							if loginFound && credentials.Login == "" {
 								credentials.Login = part
 							}
-							if password_found && credentials.Password == "" {
+							if passwordFound && credentials.Password == "" {
 								credentials.Password = part
 							}
 						}
@@ -88,27 +99,31 @@ func (f *File) Fetch(host string) (credentials, bool) {
 				}
 			}
 		}
-		// Found everything in one-line format (above)
+		// Found everything in single-line format (above)
 		if credentials.Login != "" && credentials.Password != "" {
-			credentials_found = true
+			credentialsFound = true
 			break
 		}
-		if machine_found && strings.HasPrefix(line, "login ") {
-			line_parts := strings.Split(line, " ")
-			credentials.Login = line_parts[1]
+		if machineFound && strings.HasPrefix(line, "login ") {
+			lineParts := strings.Split(line, " ")
+			credentials.Login = lineParts[1]
 		}
-		if machine_found && strings.HasPrefix(line, "password") {
-			line_parts := strings.Split(line, "password ")
-			credentials.Password = line_parts[1]
+		if machineFound && strings.HasPrefix(line, "password") {
+			lineParts := strings.Split(line, "password ")
+			credentials.Password = lineParts[1]
 		}
 		// Found everything on multiple lines
 		if credentials.Login != "" && credentials.Password != "" {
-			credentials_found = true
+			credentialsFound = true
 			break
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		panic("Unable to read file")
+		return Credentials{}, fmt.Errorf("Error reading file: %v", err)
 	}
-	return credentials, credentials_found
+
+	if !credentialsFound {
+		return Credentials{}, fmt.Errorf("Credentials for machine: %v not found", host)
+	}
+	return credentials, nil
 }

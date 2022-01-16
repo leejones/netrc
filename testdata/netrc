@@ -1,18 +1,21 @@
-machine ferb.example.com
-  login Ferb
-  password HeDoesntSayMuch
+# Comments should be ignored
+machine green.example.com
+  login Blue
+  password Yellow
 
-machine isabella.example.com login Isabella password WhatYaDoin?
+# Example of the single-line format
+machine purple.example.com login Blue password Red
 
-machine perry.example.com
-  login Perry
-  password WheresPerry?
+# First of two occurences of this machine
+machine orange.example.com
+  login Red
+  password Yellow
 
-machine phineas.example.com
-  login Phineas
-  password WhatDoYouWantToDoToday?
+machine greenish-yellow.example.com
+  login Green
+  password Yellow
 
-# Example of machine listed twice
-machine perry.example.com
-  login should-not-match
-  password should-not-match
+# Second of two occurences of this machine
+machine orangish-brown.example.com
+  login Orange
+  password Brown
