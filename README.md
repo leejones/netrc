@@ -1,6 +1,6 @@
 # netrc
 
-Package netrc gets credentials for a given host from a netrc file.
+A Go package that gets the credentials for a given host from a netrc file.
 
 ## Example Usage
 
