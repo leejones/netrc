@@ -14,7 +14,7 @@ url, _ := url.Parse("https://example.com/")
 client := http.Client{Timeout: 5 * time.Second}
 request, _ := http.NewRequest("GET", url.String(), nil)
 
-credentials, _ := netrc.Get(url.Host)
+credentials, err := netrc.Get(url.Host)
 if err != nil {
   fmt.Fprintf(os.Stderr, "Failed to load credentials from netrc file: %v\n", err)
   os.Exit(1)
