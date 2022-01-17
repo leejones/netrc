@@ -20,7 +20,7 @@ if err != nil {
   os.Exit(1)
 }
 
-request.SetBasicAuth(credentials.Login, credentials.Password)
+request.SetBasicAuth(credentials.Username, credentials.Password)
 
 response, _ := client.Do(request)
 // handle err and response etc

@@ -25,7 +25,7 @@ func TestGetMachineFound(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := netrc.Credentials{
-		Login:    "Blue",
+		Username: "Blue",
 		Password: "Yellow",
 	}
 	got, err := netrcFile.Get("green.example.com")
@@ -59,7 +59,7 @@ func TestGetMultipleMachinesReturnsFirst(t *testing.T) {
 		t.Error(err)
 	}
 	want := netrc.Credentials{
-		Login:    "Red",
+		Username: "Red",
 		Password: "Yellow",
 	}
 	got, err := f.Get("orange.example.com")
@@ -80,7 +80,7 @@ func TestGetMachineOneLineFormat(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := netrc.Credentials{
-		Login:    "Blue",
+		Username: "Blue",
 		Password: "Red",
 	}
 	got, err := f.Get("purple.example.com")

@@ -10,7 +10,7 @@ import (
 )
 
 type Credentials struct {
-	Login    string
+	Username string
 	Password string
 }
 
@@ -88,8 +88,8 @@ func (f *File) Get(host string) (Credentials, error) {
 						case "password":
 							passwordFound = true
 						default:
-							if loginFound && credentials.Login == "" {
-								credentials.Login = part
+							if loginFound && credentials.Username == "" {
+								credentials.Username = part
 							}
 							if passwordFound && credentials.Password == "" {
 								credentials.Password = part
@@ -100,20 +100,20 @@ func (f *File) Get(host string) (Credentials, error) {
 			}
 		}
 		// Found everything in single-line format (above)
-		if credentials.Login != "" && credentials.Password != "" {
+		if credentials.Username != "" && credentials.Password != "" {
 			credentialsFound = true
 			break
 		}
 		if machineFound && strings.HasPrefix(line, "login ") {
 			lineParts := strings.Split(line, " ")
-			credentials.Login = lineParts[1]
+			credentials.Username = lineParts[1]
 		}
 		if machineFound && strings.HasPrefix(line, "password") {
 			lineParts := strings.Split(line, "password ")
 			credentials.Password = lineParts[1]
 		}
 		// Found everything on multiple lines
-		if credentials.Login != "" && credentials.Password != "" {
+		if credentials.Username != "" && credentials.Password != "" {
 			credentialsFound = true
 			break
 		}
